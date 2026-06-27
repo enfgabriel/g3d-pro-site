@@ -3,17 +3,40 @@ state.cache.admins = [];
 state.cache.adminReady = false;
 state.cache.adminSetupMissing = false;
 
-function currentUserEmail() {
-  return String(state.session?.user?.email || "").trim().toLowerCase();
+function normalizeEmail(email) {
+  return String(email || "").trim().toLowerCase();
 }
 
-function isBootstrapAdmin() {
-  return BOOTSTRAP_ADMIN_EMAILS.includes(currentUserEmail());
+function currentUserEmail() {
+  return normalizeEmail(state.session?.user?.email);
+}
+
+function isBootstrapAdmin(email = currentUserEmail()) {
+  return BOOTSTRAP_ADMIN_EMAILS.includes(normalizeEmail(email));
+}
+
+function activeAdmins() {
+  const seen = new Set();
+  return (state.cache.admins || []).filter(admin => {
+    const email = normalizeEmail(admin.email);
+    if (!email || seen.has(email) || admin.ativo === false) return false;
+    seen.add(email);
+    return true;
+  });
+}
+
+function currentAdminRecord() {
+  const email = currentUserEmail();
+  return activeAdmins().find(admin => normalizeEmail(admin.email) === email) || null;
 }
 
 function isCurrentUserAdmin() {
-  const email = currentUserEmail();
-  return isBootstrapAdmin() || (state.cache.admins || []).some(admin => String(admin.email || "").toLowerCase() === email && admin.ativo !== false);
+  return isBootstrapAdmin() || Boolean(currentAdminRecord());
+}
+
+function isCurrentUserOwner() {
+  const record = currentAdminRecord();
+  return isBootstrapAdmin() || normalizeEmail(record?.role) === "owner";
 }
 
 function ensureAdminPageInMenu() {
@@ -78,8 +101,13 @@ renderPage = function renderPageWithAdmin() {
 };
 
 function renderAdminPage(el) {
-  const rows = state.cache.admins || [];
+  const rows = activeAdmins();
   const bootstrapOnly = state.cache.adminSetupMissing;
+  const canManageAdmins = isCurrentUserOwner() && !bootstrapOnly;
+  const bootstrapEmail = currentUserEmail();
+  const rowsWithoutBootstrap = rows.filter(admin => !isBootstrapAdmin(admin.email));
+  const activeCount = rowsWithoutBootstrap.length + (isBootstrapAdmin() ? 1 : 0);
+
   el.innerHTML = `
     <div class="page-head">
       <div>
@@ -95,6 +123,13 @@ function renderAdminPage(el) {
       </section>
     ` : ""}
 
+    ${!canManageAdmins && !bootstrapOnly ? `
+      <section class="admin-note">
+        <strong>Acesso de visualização</strong>
+        <p>Seu perfil pode abrir a Área ADM, mas somente um owner pode adicionar ou remover administradores.</p>
+      </section>
+    ` : ""}
+
     <div class="admin-grid">
       <section class="card admin-card">
         <div class="card-head-row">
@@ -102,31 +137,32 @@ function renderAdminPage(el) {
             <h3>Administradores</h3>
             <p class="muted small">Usuários com acesso à área ADM.</p>
           </div>
-          <span class="badge good">${rows.length + (isBootstrapAdmin() ? 1 : 0)} ativos</span>
+          <span class="badge good">${activeCount} ativos</span>
         </div>
         <div class="admin-list">
-          ${isBootstrapAdmin() ? renderAdminItem({ email: currentUserEmail(), role: "admin inicial", bootstrap: true }) : ""}
-          ${rows.length ? rows.map(renderAdminItem).join("") : `<p class="muted">Nenhum admin cadastrado na tabela ainda.</p>`}
+          ${isBootstrapAdmin() ? renderAdminItem({ email: bootstrapEmail, role: "owner", bootstrap: true }, canManageAdmins) : ""}
+          ${rowsWithoutBootstrap.length ? rowsWithoutBootstrap.map(admin => renderAdminItem(admin, canManageAdmins)).join("") : `<p class="muted">Nenhum admin extra cadastrado ainda.</p>`}
         </div>
       </section>
 
-      <section class="card admin-card">
+      <section class="card admin-card ${canManageAdmins ? "" : "admin-card-locked"}">
         <h3>Adicionar ADM</h3>
         <p class="muted small">Cadastre o email do usuário que também poderá gerenciar a área administrativa.</p>
         <form id="adminForm" class="admin-form">
           <div class="field">
             <label>Email do novo ADM</label>
-            <input type="email" name="email" required placeholder="admin@sualoja.com" ${bootstrapOnly ? "disabled" : ""} />
+            <input type="email" name="email" required placeholder="admin@sualoja.com" ${canManageAdmins ? "" : "disabled"} />
           </div>
           <div class="field">
             <label>Nível</label>
-            <select name="role" ${bootstrapOnly ? "disabled" : ""}>
+            <select name="role" ${canManageAdmins ? "" : "disabled"}>
               <option value="admin">Admin</option>
               <option value="owner">Owner</option>
               <option value="suporte">Suporte</option>
             </select>
           </div>
-          <button class="btn primary full" type="submit" ${bootstrapOnly ? "disabled" : ""}>Adicionar ADM</button>
+          <button class="btn primary full" type="submit" ${canManageAdmins ? "" : "disabled"}>Adicionar ADM</button>
+          ${canManageAdmins ? "" : `<p class="muted small admin-form-note">Disponível apenas para owner.</p>`}
         </form>
       </section>
 
@@ -147,46 +183,60 @@ function renderAdminPage(el) {
   });
 }
 
-function renderAdminItem(admin) {
+function renderAdminItem(admin, canManageAdmins) {
   const email = escapeHtml(admin.email || "");
   const role = escapeHtml(admin.role || admin.perfil || "admin");
   const bootstrap = Boolean(admin.bootstrap);
+  const canRemove = canManageAdmins && !bootstrap && normalizeEmail(admin.email) !== currentUserEmail();
   return `
     <div class="admin-item">
       <div>
         <strong>${email}</strong>
         <span>${role}${bootstrap ? " · protegido" : ""}</span>
       </div>
-      ${bootstrap ? `<span class="badge blue">Inicial</span>` : `<button class="btn danger" type="button" data-remove-admin="${email}">Remover</button>`}
+      ${bootstrap ? `<span class="badge blue">Inicial</span>` : canRemove ? `<button class="btn danger" type="button" data-remove-admin="${email}">Remover</button>` : `<span class="badge">Protegido</span>`}
     </div>
   `;
 }
 
+function adminErrorMessage(error) {
+  const text = String(error?.message || "").toLowerCase();
+  if (text.includes("row-level security") || text.includes("violates row-level security")) return "Apenas um owner pode alterar administradores.";
+  if (text.includes("duplicate") || text.includes("unique")) return "Este email já está cadastrado como ADM.";
+  return error?.message || "Não foi possível concluir esta ação.";
+}
+
 async function addAdminUser(event) {
   event.preventDefault();
+  if (!isCurrentUserOwner()) {
+    showToast("Apenas um owner pode adicionar ADMs.");
+    return;
+  }
   if (state.cache.adminSetupMissing) {
     showToast("Crie a tabela app_admins no Supabase antes de adicionar ADMs.");
     return;
   }
 
   const formData = new FormData(event.currentTarget);
-  const email = String(formData.get("email") || "").trim().toLowerCase();
+  const email = normalizeEmail(formData.get("email"));
   const role = String(formData.get("role") || "admin");
   if (!email) return;
 
-  const { error } = await supabaseClient.from("app_admins").insert({
+  const { error } = await supabaseClient.from("app_admins").upsert({
     email,
     role,
     ativo: true,
-    created_by: state.session.user.id
-  });
+    created_by: state.session.user.id,
+    updated_at: new Date().toISOString()
+  }, { onConflict: "email" });
 
   if (error) {
-    showToast(error.message);
+    showToast(adminErrorMessage(error));
     return;
   }
 
   showToast("Novo ADM adicionado.");
+  event.currentTarget.reset();
   await loadAdmins();
   renderApp();
   state.page = "admin";
@@ -194,14 +244,24 @@ async function addAdminUser(event) {
 }
 
 async function removeAdminUser(email) {
-  if (!email) return;
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) return;
+  if (!isCurrentUserOwner()) {
+    showToast("Apenas um owner pode remover ADMs.");
+    return;
+  }
+  if (normalizedEmail === currentUserEmail() || isBootstrapAdmin(normalizedEmail)) {
+    showToast("Este ADM é protegido e não pode ser removido por aqui.");
+    return;
+  }
+
   const { error } = await supabaseClient
     .from("app_admins")
     .update({ ativo: false, updated_at: new Date().toISOString() })
-    .eq("email", email.toLowerCase());
+    .eq("email", normalizedEmail);
 
   if (error) {
-    showToast(error.message);
+    showToast(adminErrorMessage(error));
     return;
   }
 
