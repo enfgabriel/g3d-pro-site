@@ -49,25 +49,53 @@
   margin-top: 14px;
 }
 
-.admin-alert {
+.admin-form-note {
+  margin: 10px 0 0;
+  text-align: center;
+}
+
+.admin-card-locked {
+  position: relative;
+  opacity: .86;
+}
+
+.admin-card-locked input,
+.admin-card-locked select {
+  background: rgba(17,22,28,.72);
+}
+
+.admin-alert,
+.admin-note {
   margin-bottom: 14px;
   padding: 14px 16px;
-  border: 1px solid rgba(245,158,11,.42);
   border-radius: var(--radius);
+  line-height: 1.5;
+}
+
+.admin-alert {
+  border: 1px solid rgba(245,158,11,.42);
   background: rgba(245,158,11,.09);
   color: #fde68a;
 }
 
+.admin-note {
+  border: 1px solid rgba(56,189,248,.32);
+  background: rgba(56,189,248,.08);
+  color: #d7efff;
+}
+
 .admin-alert strong,
-.admin-alert p {
+.admin-alert p,
+.admin-note strong,
+.admin-note p {
   display: block;
   margin: 0;
 }
 
-.admin-alert p {
+.admin-alert p,
+.admin-note p {
   margin-top: 6px;
-  color: #f8d995;
-  line-height: 1.5;
+  color: #b7c4cf;
 }
 
 .admin-alert code {
