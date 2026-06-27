@@ -202,6 +202,22 @@
   text-decoration: none;
 }
 
+.budget-breakdown {
+  display: grid;
+  gap: 6px;
+}
+
+.budget-breakdown strong {
+  color: var(--text);
+  font-size: 15px;
+}
+
+.budget-breakdown span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 @media (max-width: 960px) {
   .admin-grid,
   .admin-actions-grid,
