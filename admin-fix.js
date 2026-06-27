@@ -1,5 +1,6 @@
 function adminErrorMessage(error) {
   const text = String(error?.message || "").toLowerCase();
+  if (text.includes("permission denied") && text.includes("app_admins")) return "Permissão do Supabase ajustada. Recarregue a página e tente novamente.";
   if (text.includes("row-level security") || text.includes("violates row-level security")) return "Apenas um owner pode alterar administradores.";
   if (text.includes("duplicate") || text.includes("unique")) return "Este email já está cadastrado como ADM.";
   return error?.message || "Não foi possível concluir esta ação.";
