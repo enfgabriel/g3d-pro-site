@@ -21,36 +21,38 @@ function colorSwatchStyle(colors) {
   return colors.length > 1 ? `background: linear-gradient(135deg, ${safe});` : `background: ${safe};`;
 }
 
-function colorPickerHtml(current = "") {
+function colorPickerHtml(current = "", prefix = "budget") {
   const normalized = String(current || "").trim().toLowerCase();
   const presetMatch = G3D_COLOR_PRESETS.some(item => item.value && item.value.toLowerCase() === normalized);
   const customValue = presetMatch ? "" : current;
   return `
-    <div class="field span-2 color-picker-field">
+    <div class="field span-2 color-picker-field" data-color-picker="${escapeHtml(prefix)}">
       <label>Cor</label>
-      <input type="hidden" name="cor" id="budgetColorValue" value="${escapeHtml(current || "")}" />
-      <div class="color-grid" id="budgetColorGrid">
+      <input type="hidden" name="cor" id="${prefix}ColorValue" value="${escapeHtml(current || "")}" />
+      <div class="color-grid" id="${prefix}ColorGrid">
         ${G3D_COLOR_PRESETS.map(item => {
           const selected = item.custom ? !presetMatch && Boolean(current) : item.value.toLowerCase() === normalized;
           return `<button class="color-chip ${selected ? "active" : ""}" type="button" data-color-name="${escapeHtml(item.value)}" data-custom="${item.custom ? "true" : "false"}"><span class="color-swatch" style="${colorSwatchStyle(item.colors)}"></span><span>${escapeHtml(item.name)}</span></button>`;
         }).join("")}
       </div>
-      <div class="custom-color-row" id="customColorRow" style="${customValue ? "" : "display:none"}">
-        <input name="cor_custom_text" id="customColorText" value="${escapeHtml(customValue || "")}" placeholder="Ex: Azul petróleo, Silk cobre, Degradê verde/roxo" />
-        <input type="color" id="customColorA" value="#24d982" title="Cor inicial" />
-        <input type="color" id="customColorB" value="#38bdf8" title="Cor final" />
-        <div class="custom-gradient-preview" id="customGradientPreview"></div>
+      <div class="custom-color-row" id="${prefix}CustomColorRow" style="${customValue ? "" : "display:none"}">
+        <input name="cor_custom_text" id="${prefix}CustomColorText" value="${escapeHtml(customValue || "")}" placeholder="Ex: Azul petróleo, Silk cobre, Degradê verde/roxo" />
+        <input type="color" id="${prefix}CustomColorA" value="#24d982" title="Cor inicial" />
+        <input type="color" id="${prefix}CustomColorB" value="#38bdf8" title="Cor final" />
+        <div class="custom-gradient-preview" id="${prefix}CustomGradientPreview"></div>
       </div>
     </div>`;
 }
 
-function setupColorPicker(form) {
-  const colorValue = form.querySelector("#budgetColorValue");
-  const customRow = form.querySelector("#customColorRow");
-  const customText = form.querySelector("#customColorText");
-  const customA = form.querySelector("#customColorA");
-  const customB = form.querySelector("#customColorB");
-  const preview = form.querySelector("#customGradientPreview");
+function setupColorPicker(form, prefix = "budget") {
+  const root = form.querySelector(`[data-color-picker="${prefix}"]`);
+  if (!root) return;
+  const colorValue = root.querySelector(`#${prefix}ColorValue`);
+  const customRow = root.querySelector(`#${prefix}CustomColorRow`);
+  const customText = root.querySelector(`#${prefix}CustomColorText`);
+  const customA = root.querySelector(`#${prefix}CustomColorA`);
+  const customB = root.querySelector(`#${prefix}CustomColorB`);
+  const preview = root.querySelector(`#${prefix}CustomGradientPreview`);
   const updatePreview = () => {
     if (preview) preview.style.background = `linear-gradient(135deg, ${customA?.value || "#24d982"}, ${customB?.value || "#38bdf8"})`;
   };
@@ -59,9 +61,9 @@ function setupColorPicker(form) {
     colorValue.value = label;
   };
 
-  form.querySelectorAll(".color-chip").forEach(button => {
+  root.querySelectorAll(".color-chip").forEach(button => {
     button.addEventListener("click", () => {
-      form.querySelectorAll(".color-chip").forEach(item => item.classList.remove("active"));
+      root.querySelectorAll(".color-chip").forEach(item => item.classList.remove("active"));
       button.classList.add("active");
       const isCustom = button.dataset.custom === "true";
       customRow.style.display = isCustom ? "grid" : "none";
@@ -79,18 +81,33 @@ function setupColorPicker(form) {
   updatePreview();
 }
 
+function replaceColorInputWithPicker(form, prefix, current) {
+  const oldColorField = [...form.querySelectorAll(".field")].find(field => field.querySelector('input[name="cor"]'));
+  if (!oldColorField) return false;
+  oldColorField.outerHTML = colorPickerHtml(current || oldColorField.querySelector('input[name="cor"]')?.value || "", prefix);
+  setupColorPicker(form, prefix);
+  return true;
+}
+
 const colorPreviousOpenBudgetForm = openBudgetForm;
 openBudgetForm = function openBudgetFormWithColors(row = {}) {
   colorPreviousOpenBudgetForm(row);
   const form = document.getElementById("budgetForm");
   if (!form) return;
-  const oldColorField = [...form.querySelectorAll(".field")].find(field => field.querySelector('input[name="cor"]'));
-  if (!oldColorField) return;
-  oldColorField.outerHTML = colorPickerHtml(row.cor || form.cor?.value || "");
-  setupColorPicker(form);
+  replaceColorInputWithPicker(form, "budget", row.cor || form.cor?.value || "");
   form.addEventListener("g3d:color-change", () => {
     const payload = Object.fromEntries(new FormData(form).entries());
     const stock = findStockForBudget(payload);
-    if (stock && form.querySelector("#budgetColorValue")) form.querySelector("#budgetColorValue").value = stock.cor || form.querySelector("#budgetColorValue").value;
+    const colorValue = form.querySelector("#budgetColorValue");
+    if (stock && colorValue && !colorValue.value) colorValue.value = stock.cor || "";
   });
+};
+
+const colorPreviousOpenForm = openForm;
+openForm = function openFormWithStockColors(module, row = {}) {
+  colorPreviousOpenForm(module, row);
+  if (module?.table !== "estoque") return;
+  const form = document.getElementById("recordForm");
+  if (!form) return;
+  replaceColorInputWithPicker(form, "stock", row.cor || form.cor?.value || "");
 };
