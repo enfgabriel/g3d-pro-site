@@ -48,9 +48,29 @@
   width: min(780px, 100%);
 }
 
+.finance-report-panel {
+  display: grid;
+  gap: 14px;
+  margin: 0 0 14px;
+}
+
+.finance-report-panel .section-head {
+  margin-bottom: 0;
+}
+
+.finance-report-panel .form-grid {
+  grid-template-columns: repeat(2, minmax(0, 220px));
+  align-items: end;
+}
+
+.finance-report-panel .field {
+  margin: 0;
+}
+
 @media (max-width: 900px) {
   .finance-summary,
-  .finance-payment-head {
+  .finance-payment-head,
+  .finance-report-panel .form-grid {
     grid-template-columns: 1fr;
   }
 
