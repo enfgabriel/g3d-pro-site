@@ -9,6 +9,7 @@ function budgetProfileDefaults(profile = {}) {
     cidade: profile.cidade || "",
     estado: profile.estado || "",
     endereco: profile.endereco || "",
+    logo_path: profile.logo_path || "",
     logo_url: profile.logo_url || "",
     validade_dias: Number(profile.validade_dias || 7),
     prazo_padrao: profile.prazo_padrao || "A combinar conforme fila de produção.",
