@@ -1,11 +1,12 @@
 async function loadProductionHistory() {
   state.cache.producao_historico = state.cache.producao_historico || [];
-  const { data, error } = await supabaseClient
+  const query = () => supabaseClient
     .from("producao_historico")
     .select("*")
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(80);
+  const { data, error } = typeof g3dRunWithFreshSession === "function" ? await g3dRunWithFreshSession(query) : await query();
   if (!error) state.cache.producao_historico = data || [];
 }
 
@@ -50,9 +51,19 @@ function renderProductionHistoryPanel(rows = productionHistoryRows()) {
     </div>`;
 }
 
+async function productionHistoryUserId() {
+  if (typeof g3dEnsureFreshSession === "function") {
+    const ready = await g3dEnsureFreshSession();
+    return ready.session?.user?.id || null;
+  }
+  const { data } = await supabaseClient.auth.getSession();
+  state.session = data?.session || state.session;
+  return data?.session?.user?.id || state.session?.user?.id || null;
+}
+
 async function registerProductionHistory(row, stock, consumo, previousBalance, nextBalance) {
+  const userId = await productionHistoryUserId();
   const payload = {
-    user_id: state.session?.user?.id || null,
     producao_id: row.id,
     pedido_id: row.pedido_id || null,
     orcamento_id: row.orcamento_id || null,
@@ -69,7 +80,10 @@ async function registerProductionHistory(row, stock, consumo, previousBalance, n
     cor: row.cor || stock.cor || "",
     observacao: `Baixa automática da produção ${row.numero || row.titulo || ""}.`
   };
-  return supabaseClient.from("producao_historico").insert(payload);
+  if (userId) payload.user_id = userId;
+  const cleanPayload = typeof g3dNormalizePayload === "function" ? g3dNormalizePayload(payload) : payload;
+  const query = () => supabaseClient.from("producao_historico").insert(cleanPayload);
+  return typeof g3dRunWithFreshSession === "function" ? g3dRunWithFreshSession(query) : query();
 }
 
 finishProductionAndConsumeStock = async function finishProductionAndConsumeStockWithHistory(row) {
@@ -111,7 +125,8 @@ finishProductionAndConsumeStock = async function finishProductionAndConsumeStock
 
   const historyResult = await registerProductionHistory(row, stock, consumo, previousBalance, remaining);
   if (historyResult.error) {
-    showToast("Produção finalizada, mas o histórico ainda precisa do ajuste do banco.");
+    const text = String(historyResult.error.message || "");
+    showToast(text ? `Histórico não registrado: ${text}` : "Produção finalizada, mas o histórico ainda precisa do ajuste do banco.");
   } else {
     showToast(`Produção finalizada: ${consumo.toLocaleString("pt-BR")} g/ml baixados e histórico registrado.`);
   }
