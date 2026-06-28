@@ -1,0 +1,54 @@
+.pricing-form {
+  display: grid;
+  gap: 14px;
+}
+
+.pricing-section {
+  display: grid;
+  gap: 14px;
+}
+
+.pricing-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 12px;
+}
+
+.pricing-section-head h3,
+.pricing-preview h3 {
+  margin: 0 0 6px;
+}
+
+.pricing-section-head p,
+.pricing-preview p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.pricing-form small {
+  display: block;
+  min-height: 34px;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.pricing-preview {
+  display: grid;
+  gap: 12px;
+}
+
+@media (max-width: 680px) {
+  .pricing-section-head {
+    display: block;
+  }
+
+  .pricing-form small {
+    min-height: 0;
+  }
+}
