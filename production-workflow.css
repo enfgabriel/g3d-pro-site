@@ -33,8 +33,31 @@
   min-width: 260px;
 }
 
+.production-report-panel,
 .production-history-panel {
   margin-top: 14px;
+}
+
+.production-report-panel .form-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.production-report-panel .field {
+  margin: 0;
+}
+
+.production-report-panel select {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  padding: 0 12px;
+}
+
+.production-report-panel select option {
+  color: #111827;
 }
 
 .section-head {
@@ -54,11 +77,17 @@
 }
 
 @media (max-width: 820px) {
-  .production-summary {
+  .production-summary,
+  .production-report-panel .form-grid {
     grid-template-columns: 1fr;
   }
 
   .production-actions {
     min-width: 0;
+  }
+
+  .section-head {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
