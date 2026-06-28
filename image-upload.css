@@ -1,0 +1,119 @@
+.image-upload-panel {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .03);
+}
+
+.image-upload-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.image-upload-head h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.image-upload-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.image-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.image-upload-row input[type="file"] {
+  max-width: 100%;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+  background: #11161c;
+}
+
+.image-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 10px;
+}
+
+.image-preview-item {
+  position: relative;
+  min-height: 118px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #11161c;
+}
+
+.image-preview-item img {
+  width: 100%;
+  height: 118px;
+  display: block;
+  object-fit: cover;
+}
+
+.image-preview-item span {
+  display: block;
+  padding: 7px 8px;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.image-preview-item button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  min-height: 28px;
+  padding: 0 8px;
+  border-radius: 6px;
+  color: #fecaca;
+  background: rgba(17, 22, 28, .86);
+}
+
+.logo-preview-box {
+  width: 150px;
+  height: 92px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+  background: #11161c;
+  font-weight: 800;
+}
+
+.logo-preview-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 8px;
+  background: #fff;
+}
+
+@media (max-width: 620px) {
+  .image-upload-head,
+  .image-upload-row {
+    display: grid;
+  }
+
+  .image-upload-row .btn {
+    width: 100%;
+  }
+}
