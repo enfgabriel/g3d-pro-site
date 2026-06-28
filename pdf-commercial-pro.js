@@ -91,8 +91,14 @@ function pdfProjectImages(images = []) {
 
 openBudgetPdf = async function openBudgetPdfProfessional(row) {
   if (!row) return;
+  const win = window.open("", "_blank");
+  if (!win) return showToast("Permita pop-ups para abrir o orçamento.");
+  win.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Preparando PDF</title><style>body{margin:0;display:grid;place-items:center;min-height:100vh;font-family:Arial;background:#101820;color:white}.box{padding:24px;text-align:center}.box strong{display:block;margin-bottom:8px;color:#24d982}</style></head><body><div class="box"><strong>G3D Pro</strong><span>Preparando orçamento com imagens...</span></div></body></html>`);
+  win.document.close();
+
   const profile = budgetProfileDefaults(state.cache.loja || {});
-  const logoUrl = typeof g3dAssetUrl === "function" ? await g3dAssetUrl(profile.logo_path || profile.logo_url) : profile.logo_url;
+  const logoSource = profile.logo_path || profile.logo_url || state.cache.loja?.logo_path || state.cache.loja?.logo_url || "";
+  const logoUrl = typeof g3dAssetUrl === "function" ? await g3dAssetUrl(logoSource) : profile.logo_url;
   const pdfProfile = { ...profile, logo_url: logoUrl || profile.logo_url || "" };
   const projectImages = typeof g3dBudgetImageUrls === "function" ? await g3dBudgetImageUrls(row) : [];
   const client = (state.cache.clientes || []).find(item => item.id === row.cliente_id);
@@ -103,9 +109,8 @@ openBudgetPdf = async function openBudgetPdfProfessional(row) {
   const subtotal = breakdown ? breakdown.commercialSubtotal : Number(row.total || 0);
   const discounts = breakdown ? breakdown.discountPercent + breakdown.discountValue : Number(row.desconto_valor || 0);
   const total = Number(row.total || breakdown?.total || calculatePrice(row));
-  const win = window.open("", "_blank");
-  if (!win) return showToast("Permita pop-ups para abrir o orçamento.");
 
+  win.document.open();
   win.document.write(`<!doctype html>
 <html lang="pt-BR">
 <head>
