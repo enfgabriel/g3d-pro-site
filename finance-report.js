@@ -1,14 +1,23 @@
+function financeReportParseDate(value) {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) return new Date(`${value}T12:00:00`);
+  return new Date(value);
+}
+
 function financeReportDate(value = new Date()) {
-  if (!value) return "";
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
+  const date = financeReportParseDate(value);
+  if (!date || Number.isNaN(date.getTime())) return "";
   return date.toLocaleDateString("pt-BR");
 }
 
 function financeReportDateInput(value) {
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toISOString().slice(0, 10);
+  const date = financeReportParseDate(value);
+  if (!date || Number.isNaN(date.getTime())) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function financeReportSafe(value) {
@@ -21,9 +30,8 @@ function financeReportOrderDate(row) {
 
 function financeReportOrderDateObj(row) {
   const raw = financeReportOrderDate(row);
-  if (!raw) return null;
-  const date = new Date(raw);
-  if (Number.isNaN(date.getTime())) return null;
+  const date = financeReportParseDate(raw);
+  if (!date || Number.isNaN(date.getTime())) return null;
   date.setHours(0, 0, 0, 0);
   return date;
 }
@@ -46,10 +54,10 @@ function financeReportDefaultRange() {
 }
 
 function financeReportRows(startValue, endValue) {
-  const start = startValue ? new Date(`${startValue}T00:00:00`) : null;
-  const end = endValue ? new Date(`${endValue}T23:59:59`) : null;
+  const start = startValue ? financeReportParseDate(startValue) : null;
+  const end = endValue ? financeReportParseDate(endValue) : null;
   if (start) start.setHours(0, 0, 0, 0);
-  if (end) end.setHours(0, 0, 0, 0);
+  if (end) end.setHours(23, 59, 59, 999);
   return (state.cache.pedidos || []).filter(row => {
     const date = financeReportOrderDateObj(row);
     if (!date) return true;
@@ -195,10 +203,16 @@ function attachFinanceReportPanel(el) {
     </div>`;
   if (summary) summary.insertAdjacentElement("afterend", panel);
   else el.prepend(panel);
-  document.getElementById("openFinanceReportPdf").addEventListener("click", () => {
-    openFinanceReportPdf(document.getElementById("financeReportStart").value, document.getElementById("financeReportEnd").value);
-  });
+  const reportButton = document.getElementById("openFinanceReportPdf");
+  if (reportButton) {
+    reportButton.addEventListener("click", () => {
+      openFinanceReportPdf(document.getElementById("financeReportStart").value, document.getElementById("financeReportEnd").value);
+    });
+  }
 }
+
+window.openFinanceReportPdf = openFinanceReportPdf;
+window.attachFinanceReportPanel = attachFinanceReportPanel;
 
 if (typeof renderPedidosProfessional === "function") {
   const financeReportPreviousRenderPedidosProfessional = renderPedidosProfessional;
