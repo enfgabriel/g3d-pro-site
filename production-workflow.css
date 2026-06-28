@@ -1,0 +1,10 @@
+.production-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 14px;
+}
+
+@media (max-width: 820px) {
+  .production-summary {
+    grid-template-columns: 1fr;
+  }
+}
