@@ -1,0 +1,130 @@
+.announcement-command-center {
+  grid-column: 1 / -1;
+}
+
+.announcement-command-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.announcement-command-stats div {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #11161c;
+}
+
+.announcement-command-stats span,
+.announcement-command-stats strong {
+  display: block;
+}
+
+.announcement-command-stats span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.announcement-command-stats strong {
+  margin-top: 6px;
+  font-size: 24px;
+}
+
+.announcement-command-list {
+  display: grid;
+  gap: 10px;
+}
+
+.announcement-command-item {
+  display: grid;
+  grid-template-columns: 136px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255,255,255,.03);
+}
+
+.announcement-command-item img,
+.announcement-command-item .announcement-thumb-empty {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.announcement-command-body {
+  min-width: 0;
+}
+
+.announcement-command-body strong,
+.announcement-command-body p,
+.announcement-command-body small {
+  display: block;
+}
+
+.announcement-command-body strong {
+  margin: 8px 0 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.announcement-command-body p {
+  margin: 0 0 6px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.announcement-command-body small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.announcement-command-actions {
+  min-width: 210px;
+}
+
+.announcement-command-modal {
+  width: min(980px, 100%);
+}
+
+.announcement-preview-box {
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  padding: 10px;
+  background: rgba(255,255,255,.025);
+}
+
+.announcement-preview-box .announcement-card {
+  min-height: 220px;
+}
+
+.announcement-preview-modal {
+  width: min(920px, 100%);
+}
+
+@media (max-width: 980px) {
+  .announcement-command-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .announcement-command-item {
+    grid-template-columns: 120px minmax(0, 1fr);
+  }
+
+  .announcement-command-actions {
+    grid-column: 1 / -1;
+    min-width: 0;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .announcement-command-stats,
+  .announcement-command-item {
+    grid-template-columns: 1fr;
+  }
+}
