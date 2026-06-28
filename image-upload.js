@@ -82,14 +82,14 @@ async function g3dHydrateImageUrls(items) {
 }
 
 function g3dAttachLogoUploader() {
-  const form = document.getElementById("simpleForm");
+  const form = document.getElementById("storeForm") || document.getElementById("simpleForm");
   if (!form || form.dataset.g3dLogoUpload === "true") return;
   form.dataset.g3dLogoUpload = "true";
   const profile = state.cache.loja || {};
-  form.insertAdjacentHTML("beforeend", `
-    <input type="hidden" name="logo_path" value="${escapeHtml(profile.logo_path || "")}">
-    <input type="hidden" name="logo_url" value="${escapeHtml(profile.logo_url || "")}">
-    <section class="image-upload-panel">
+  if (!form.querySelector('[name="logo_path"]')) form.insertAdjacentHTML("beforeend", `<input type="hidden" name="logo_path" value="${escapeHtml(profile.logo_path || "")}">`);
+  if (!form.querySelector('[name="logo_url"]')) form.insertAdjacentHTML("beforeend", `<input type="hidden" name="logo_url" value="${escapeHtml(profile.logo_url || "")}">`);
+  const panelHtml = `
+    <section class="image-upload-panel span-2">
       <div class="image-upload-head">
         <div>
           <h3>Logo da loja</h3>
@@ -101,13 +101,18 @@ function g3dAttachLogoUploader() {
         <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp">
         <button class="btn" type="button" id="uploadLogoBtn">Enviar logo</button>
       </div>
-      <p class="muted small" id="logoUploadStatus">Depois de enviar, clique em Salvar.</p>
-    </section>`);
+      <p class="muted small" id="logoUploadStatus">Depois de enviar, clique em Salvar loja.</p>
+    </section>`;
+  const grid = form.querySelector(".form-grid");
+  if (grid) grid.insertAdjacentHTML("beforeend", panelHtml);
+  else form.insertAdjacentHTML("beforeend", panelHtml);
 
   const preview = document.getElementById("logoPreviewBox");
   const status = document.getElementById("logoUploadStatus");
+  const logoPathInput = form.querySelector('[name="logo_path"]');
+  const logoUrlInput = form.querySelector('[name="logo_url"]');
   const renderLogo = async () => {
-    const url = await g3dAssetUrl(form.logo_path.value || form.logo_url.value);
+    const url = await g3dAssetUrl(logoPathInput.value || logoUrlInput.value);
     preview.innerHTML = url ? `<img src="${escapeHtml(url)}" alt="Logo da loja">` : "G3D";
   };
   renderLogo();
@@ -117,10 +122,10 @@ function g3dAttachLogoUploader() {
     try {
       status.textContent = "Enviando logo...";
       const uploaded = await g3dUploadImage(file, "logos", "logo");
-      form.logo_path.value = uploaded.path;
-      form.logo_url.value = "";
+      logoPathInput.value = uploaded.path;
+      logoUrlInput.value = "";
       await renderLogo();
-      status.textContent = "Logo enviada. Clique em Salvar para gravar na loja.";
+      status.textContent = "Logo enviada. Clique em Salvar loja para gravar.";
       showToast("Logo enviada.");
     } catch (error) {
       status.textContent = error.message || "Não foi possível enviar a logo.";
