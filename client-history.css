@@ -1,0 +1,100 @@
+.client-list {
+  display: grid;
+  gap: 12px;
+}
+
+.client-card {
+  display: grid;
+  gap: 12px;
+}
+
+.client-card-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.client-card-main strong,
+.client-card-main span {
+  display: block;
+}
+
+.client-card-main span {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.client-card-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.client-card-metrics div {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #11161c;
+}
+
+.client-card-metrics span,
+.client-card-metrics strong {
+  display: block;
+}
+
+.client-card-metrics span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.client-card-metrics strong {
+  margin-top: 5px;
+  font-size: 18px;
+}
+
+.client-profile-modal {
+  width: min(1040px, 100%);
+}
+
+.client-profile-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.client-profile-head h2 {
+  margin: 0 0 6px;
+  font-size: 28px;
+}
+
+.client-profile-stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 16px;
+}
+
+.client-profile-section {
+  margin-top: 16px;
+}
+
+.client-profile-section h3 {
+  margin: 0 0 8px;
+}
+
+.client-history-table table {
+  min-width: 720px;
+}
+
+@media (max-width: 820px) {
+  .client-card-main,
+  .client-profile-head {
+    display: grid;
+  }
+
+  .client-card-metrics,
+  .client-profile-stats {
+    grid-template-columns: 1fr;
+  }
+}
