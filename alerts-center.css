@@ -3,6 +3,11 @@
   margin-bottom: 14px;
 }
 
+.badge.danger {
+  color: #fecaca;
+  background: rgba(239,68,68,.16);
+}
+
 .alert-center-panel,
 .alerts-dashboard-panel {
   display: grid;
