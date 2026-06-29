@@ -4,6 +4,20 @@
   color: var(--text);
 }
 
+.auth-public-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.auth-public-actions .btn {
+  min-height: 38px;
+  white-space: normal;
+  text-align: center;
+}
+
 .public-topbar {
   position: sticky;
   top: 0;
@@ -314,8 +328,10 @@
   }
 
   .public-topbar,
-  .public-section-head {
+  .public-section-head,
+  .auth-public-actions {
     display: grid;
+    grid-template-columns: 1fr;
   }
 
   .public-hero h1 {
