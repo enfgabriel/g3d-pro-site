@@ -36,7 +36,12 @@ renderParametros = function renderParametrosWithFreshSession(el) {
 
   document.getElementById("pricingForm").addEventListener("submit", async event => {
     event.preventDefault();
-    const button = event.currentTarget.querySelector('button[type="submit"]');
+    const form = event.target?.closest?.("form") || document.getElementById("pricingForm");
+    if (!form || !(form instanceof HTMLFormElement)) {
+      showToast("Não foi possível ler o formulário de parâmetros. Recarregue a página e tente novamente.");
+      return;
+    }
+    const button = form.querySelector('button[type="submit"]');
     const original = button?.textContent || "Salvar parâmetros";
     if (button) {
       button.disabled = true;
@@ -54,7 +59,7 @@ renderParametros = function renderParametrosWithFreshSession(el) {
       return renderAuth();
     }
 
-    const payload = Object.fromEntries(new FormData(event.currentTarget).entries());
+    const payload = Object.fromEntries(new FormData(form).entries());
     Object.keys(payload).forEach(key => payload[key] = Number(payload[key] || 0));
     payload.user_id = ready.session.user.id;
     payload.updated_at = new Date().toISOString();
