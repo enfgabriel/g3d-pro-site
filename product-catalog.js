@@ -1,4 +1,5 @@
 const G3D_CATALOG_TABLE = "catalogo_produtos";
+const G3D_CATALOG_CATEGORIES = ["Peça impressa", "Protótipo", "Miniatura", "Brinde", "Reposição", "Serviço", "Acabamento", "Manutenção", "Outro"];
 
 function catalogSafe(value) {
   return escapeHtml(value || "");
@@ -7,6 +8,34 @@ function catalogSafe(value) {
 function catalogNumber(value, fallback = 0) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function catalogMaterialList() {
+  return Array.isArray(window.G3D_MATERIAL_OPTIONS) ? window.G3D_MATERIAL_OPTIONS : (typeof G3D_MATERIAL_OPTIONS !== "undefined" ? G3D_MATERIAL_OPTIONS : ["PLA", "PLA+", "PETG", "ABS", "ASA", "TPU", "Nylon", "PC", "Resina", "Outro"]);
+}
+
+function catalogMaterialOptionsHtml(current = "") {
+  if (typeof materialOptionsHtml === "function") return materialOptionsHtml(current);
+  const options = catalogMaterialList();
+  const normalized = String(current || "").trim();
+  const hasPreset = options.includes(normalized);
+  return options.map(item => `<option value="${catalogSafe(item)}" ${item === (hasPreset ? normalized : "Outro") ? "selected" : ""}>${catalogSafe(item)}</option>`).join("");
+}
+
+function catalogCategoryOptionsHtml(current = "") {
+  const normalized = String(current || "").trim();
+  const hasPreset = G3D_CATALOG_CATEGORIES.includes(normalized);
+  return G3D_CATALOG_CATEGORIES.map(item => `<option value="${catalogSafe(item)}" ${item === (hasPreset ? normalized : "Outro") ? "selected" : ""}>${catalogSafe(item)}</option>`).join("");
+}
+
+function catalogCustomMaterial(row = {}) {
+  const material = row.material || "";
+  return material && !catalogMaterialList().includes(material) ? material : "";
+}
+
+function catalogCustomCategory(row = {}) {
+  const category = row.categoria || "";
+  return category && !G3D_CATALOG_CATEGORIES.includes(category) ? category : "";
 }
 
 function ensureCatalogState() {
@@ -148,7 +177,14 @@ function renderCatalogo(el) {
   hydrateCatalogImages(el);
 }
 
+function catalogColorPickerMarkup(current = "") {
+  if (typeof colorPickerHtml === "function") return colorPickerHtml(current, "catalog");
+  return `<div class="field"><label>Cor</label><input name="cor" value="${catalogSafe(current)}"></div>`;
+}
+
 function openCatalogForm(row = {}) {
+  const customMaterial = catalogCustomMaterial(row);
+  const customCategory = catalogCustomCategory(row);
   const backdrop = document.createElement("div");
   backdrop.className = "modal-backdrop";
   backdrop.innerHTML = `
@@ -160,10 +196,12 @@ function openCatalogForm(row = {}) {
           <div class="field"><label>Status</label><select name="ativo"><option value="true" ${row.ativo !== false ? "selected" : ""}>Ativo</option><option value="false" ${row.ativo === false ? "selected" : ""}>Inativo</option></select></div>
           <div class="field"><label>Nome</label><input name="nome" value="${catalogSafe(row.nome || "")}" required></div>
           <div class="field"><label>SKU ou código interno</label><input name="sku" value="${catalogSafe(row.sku || "")}"></div>
-          <div class="field"><label>Categoria</label><input name="categoria" value="${catalogSafe(row.categoria || "")}" placeholder="Ex.: miniatura, manutenção, protótipo"></div>
+          <div class="field"><label>Categoria</label><select name="categoria_select" id="catalogCategorySelect">${catalogCategoryOptionsHtml(row.categoria || "")}</select></div>
+          <div class="field" id="catalogOtherCategoryField" style="${customCategory ? "" : "display:none"}"><label>Outra categoria</label><input name="categoria_outro" value="${catalogSafe(customCategory)}" placeholder="Ex.: decoração, suporte, acessório"></div>
           <div class="field"><label>Estoque vinculado</label><select name="estoque_id" id="catalogStockSelect">${catalogStockOptions(row.estoque_id || "")}</select></div>
-          <div class="field"><label>Material</label><input name="material" value="${catalogSafe(row.material || "PLA")}"></div>
-          <div class="field"><label>Cor</label><input name="cor" value="${catalogSafe(row.cor || "")}"></div>
+          <div class="field"><label>Material</label><select name="material_select" id="catalogMaterialSelect">${catalogMaterialOptionsHtml(row.material || "PLA")}</select></div>
+          <div class="field span-2" id="catalogOtherMaterialField" style="${customMaterial ? "" : "display:none"}"><label>Outro material</label><input name="material_outro" value="${catalogSafe(customMaterial)}" placeholder="Informe o material" /></div>
+          ${catalogColorPickerMarkup(row.cor || "")}
           <div class="field"><label>Peso por unidade g/ml</label><input type="number" step="0.01" name="peso_g" value="${catalogSafe(row.peso_g || 0)}"></div>
           <div class="field"><label>Quantidade padrão</label><input type="number" step="1" name="quantidade_pecas" value="${catalogSafe(row.quantidade_pecas || 1)}"></div>
           <div class="field"><label>Tempo de impressão h</label><input type="number" step="0.01" name="tempo_horas" value="${catalogSafe(row.tempo_horas || 0)}"></div>
@@ -201,6 +239,40 @@ function openCatalogForm(row = {}) {
   });
 }
 
+function catalogToggleOtherMaterial(form) {
+  const field = document.getElementById("catalogOtherMaterialField");
+  if (field) field.style.display = form.material_select?.value === "Outro" ? "grid" : "none";
+}
+
+function catalogToggleOtherCategory(form) {
+  const field = document.getElementById("catalogOtherCategoryField");
+  if (field) field.style.display = form.categoria_select?.value === "Outro" ? "grid" : "none";
+}
+
+function catalogSetMaterialValue(form, value = "") {
+  const material = String(value || "").trim();
+  if (!form.material_select) return;
+  if (catalogMaterialList().includes(material)) {
+    form.material_select.value = material;
+    if (form.material_outro) form.material_outro.value = "";
+  } else {
+    form.material_select.value = "Outro";
+    if (form.material_outro) form.material_outro.value = material;
+  }
+  catalogToggleOtherMaterial(form);
+}
+
+function catalogSetColorValue(form, value = "") {
+  const color = String(value || "").trim();
+  const root = form.querySelector('[data-color-picker="catalog"]');
+  if (root && typeof colorPickerHtml === "function" && typeof setupColorPicker === "function") {
+    root.outerHTML = colorPickerHtml(color, "catalog");
+    setupColorPicker(form, "catalog");
+    return;
+  }
+  if (form.cor) form.cor.value = color;
+}
+
 function setupCatalogFormInteractions(form, row) {
   const preview = document.getElementById("catalogImagePreview");
   const imagePath = form.querySelector('[name="imagem_path"]');
@@ -211,6 +283,12 @@ function setupCatalogFormInteractions(form, row) {
   };
   renderImage();
 
+  if (typeof setupColorPicker === "function") setupColorPicker(form, "catalog");
+  form.material_select?.addEventListener("change", () => catalogToggleOtherMaterial(form));
+  form.categoria_select?.addEventListener("change", () => catalogToggleOtherCategory(form));
+  catalogToggleOtherMaterial(form);
+  catalogToggleOtherCategory(form);
+
   const syncPrice = () => {
     const data = Object.fromEntries(new FormData(form).entries());
     document.getElementById("catalogCalcBox").textContent = `Preço sugerido: ${money(catalogPrice(data))}`;
@@ -220,8 +298,9 @@ function setupCatalogFormInteractions(form, row) {
   document.getElementById("catalogStockSelect").addEventListener("change", event => {
     const stock = (state.cache.estoque || []).find(item => item.id === event.target.value);
     if (!stock) return;
-    form.material.value = stock.material || stock.nome || form.material.value;
-    form.cor.value = stock.cor || form.cor.value;
+    catalogSetMaterialValue(form, stock.material || stock.nome || "");
+    catalogSetColorValue(form, stock.cor || "");
+    if (!form.preco_base.value && stock.custo_grama) form.preco_base.value = "0";
     syncPrice();
   });
 
@@ -246,6 +325,13 @@ function setupCatalogFormInteractions(form, row) {
 
 async function saveCatalogItem(payload, id = "") {
   ensureCatalogState();
+  payload.material = payload.material_select === "Outro" ? payload.material_outro : payload.material_select;
+  payload.categoria = payload.categoria_select === "Outro" ? payload.categoria_outro : payload.categoria_select;
+  delete payload.material_select;
+  delete payload.material_outro;
+  delete payload.categoria_select;
+  delete payload.categoria_outro;
+  delete payload.cor_custom_text;
   ["peso_g", "tempo_horas", "pos_horas", "quantidade_pecas", "preco_base", "margem_percentual"].forEach(key => {
     if (payload[key] === "") payload[key] = null;
     else payload[key] = Number(payload[key] || 0);
