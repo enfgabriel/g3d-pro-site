@@ -53,7 +53,7 @@ function g3dNotify(message, options = {}) {
 }
 
 function g3dProductionSignature(rows = state.cache.producoes || []) {
-  return rows.map(row => `${row.id}:${row.status || ""}:${row.etapa_atual || ""}:${row.updated_at || ""}`).sort().join("|");
+  return rows.map(row => `${row.id}:${row.status || ""}:${row.etapa_atual || ""}`).sort().join("|");
 }
 
 function g3dAnnouncementSignature() {
@@ -67,7 +67,7 @@ function g3dCheckProductionChanges() {
   if (!current) return;
   const previous = localStorage.getItem(key);
   localStorage.setItem(key, current);
-  if (previous && previous !== current) g3dNotify("Produção atualizada.");
+  if (previous && previous !== current) g3dNotify("Produção mudou de fase.");
 }
 
 function g3dCheckAnnouncementChanges() {
@@ -137,7 +137,7 @@ if (typeof updateProductionStage === "function") {
     const before = productionStageKey(row?.status || row?.etapa_atual || "fila");
     const result = await g3dPreviousUpdateProductionStage(row, nextStatus, extra);
     const after = productionStageKey(nextStatus || row?.status || row?.etapa_atual || "fila");
-    if (before !== after) g3dNotify(`Produção enviada para ${productionStageLabel(after)}.`);
+    if (before !== after) g3dPlayNotificationSound();
     return result;
   };
 }
