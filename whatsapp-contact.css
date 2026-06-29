@@ -1,0 +1,14 @@
+.whatsapp-btn {
+  color: #07120d;
+  background: #25d366;
+  font-weight: 800;
+}
+
+.whatsapp-btn:hover {
+  background: #38e27a;
+}
+
+.whatsapp-btn:disabled {
+  color: var(--muted);
+  background: var(--panel-2);
+}
