@@ -254,3 +254,14 @@ renderPage = function renderPageWithReadiness() {
   }
   readinessPreviousRenderPage();
 };
+
+function bootReadinessMenu() {
+  if (!state?.session) return;
+  const before = navPages.length;
+  ensureReadinessPageInMenu();
+  const menuHasPage = Boolean(document.querySelector('[data-page="readiness"]'));
+  if (navPages.length !== before || !menuHasPage) renderApp();
+}
+
+setTimeout(bootReadinessMenu, 700);
+setTimeout(bootReadinessMenu, 1800);
