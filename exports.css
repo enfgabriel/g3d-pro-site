@@ -1,0 +1,88 @@
+.export-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.export-kicker {
+  display: inline-block;
+  margin-bottom: 6px;
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.export-hero h2,
+.export-card h2,
+.export-note h2 {
+  margin: 0 0 6px;
+}
+
+.export-hero p,
+.export-card p,
+.export-note p {
+  margin: 0;
+}
+
+.export-score {
+  min-width: 130px;
+  padding: 16px;
+  border: 1px solid rgba(36,217,130,.24);
+  border-radius: var(--radius);
+  background: rgba(36,217,130,.08);
+  text-align: center;
+}
+
+.export-score strong,
+.export-score span {
+  display: block;
+}
+
+.export-score strong {
+  color: var(--brand);
+  font-size: 34px;
+}
+
+.export-score span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.export-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.export-card {
+  display: grid;
+  gap: 18px;
+  align-content: space-between;
+  min-height: 190px;
+}
+
+.export-card .badge {
+  margin-bottom: 10px;
+}
+
+.export-card .btn {
+  width: fit-content;
+}
+
+.export-note {
+  margin-top: 14px;
+}
+
+@media (max-width: 700px) {
+  .export-hero {
+    display: grid;
+  }
+
+  .export-score {
+    min-width: 0;
+  }
+}
