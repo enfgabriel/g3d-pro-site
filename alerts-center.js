@@ -231,7 +231,7 @@ function alertsDashboardPanelHtml() {
     <section class="card alerts-dashboard-panel" id="alertsDashboardPanel">
       <div class="section-head">
         <div><h2>Central de alertas</h2><p class="muted">${summary.total ? `${summary.total} ponto(s) pedem atenção.` : "Nenhum ponto crítico no momento."}</p></div>
-        <button class="btn" data-dashboard-page="alertas">Abrir</button>
+        <button class="btn" data-alert-page="alertas">Abrir</button>
       </div>
       <div class="alerts-mini-grid">
         <span class="badge ${summary.danger ? "danger" : "good"}">${summary.danger} crítico(s)</span>
