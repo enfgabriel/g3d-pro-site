@@ -195,6 +195,27 @@ td .btn,
   font-size: 13px;
 }
 
+.color-grid {
+  grid-template-columns: repeat(auto-fit, minmax(142px, 1fr));
+}
+
+.color-chip {
+  min-width: 0;
+  min-height: 42px;
+  justify-content: flex-start;
+  line-height: 1.15;
+  white-space: normal;
+}
+
+.color-chip span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.custom-color-row {
+  min-width: 0;
+}
+
 .dashboard-alert-strip,
 .dashboard-grid,
 .agenda-layout,
@@ -369,6 +390,10 @@ td .btn,
     min-height: 38px;
     padding-inline: 12px;
     white-space: normal;
+  }
+
+  .color-grid {
+    grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
   }
 
   .table-wrap {
