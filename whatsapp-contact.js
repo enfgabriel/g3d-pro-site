@@ -105,16 +105,23 @@ function renderClientesWithWhatsApp(el) {
   document.querySelectorAll("[data-del-client]").forEach(btn => btn.addEventListener("click", () => softDelete("clientes", btn.dataset.delClient)));
 }
 
+function g3dBudgetOrderForRow(row = {}) {
+  if (typeof budgetOrderFor === "function") return budgetOrderFor(row);
+  return (state.cache.pedidos || []).find(order => order.orcamento_id === row.id || order.id === row.pedido_id) || null;
+}
+
 function renderOrcamentosWithWhatsApp(el) {
   const rows = state.cache.orcamentos || [];
   el.innerHTML = `<div class="page-head"><div><h1>Orçamentos</h1><p class="muted">Orçamentos com cálculo por peso, tempo e parâmetros.</p></div><button class="btn primary" id="newBudget">Novo orçamento</button></div><div class="table-wrap"><table><thead><tr><th>Número</th><th>Projeto</th><th>Status</th><th>Total</th><th></th></tr></thead><tbody>${rows.length ? rows.map(row => {
     const client = g3dClientForRow(row);
-    return `<tr><td>${escapeHtml(row.numero || "")}</td><td>${escapeHtml(row.projeto || "")}<div class="muted small">${escapeHtml(client ? g3dClientName(client) : "Cliente não vinculado")}</div></td><td><span class="badge blue">${escapeHtml(row.status || "rascunho")}</span></td><td>${money(row.total)}</td><td><div class="actions">${client ? g3dWhatsAppButton(client, "btn whatsapp-btn", g3dBudgetMessage(client, row), "Enviar WhatsApp") : `<button class="btn whatsapp-btn" disabled>WhatsApp</button>`}<button class="btn" data-edit-budget="${row.id}">Editar</button><button class="btn" data-pdf-budget="${row.id}">PDF</button><button class="btn danger" data-del-budget="${row.id}">Excluir</button></div></td></tr>`;
+    const order = g3dBudgetOrderForRow(row);
+    return `<tr><td>${escapeHtml(row.numero || "")}</td><td>${escapeHtml(row.projeto || "")}<div class="muted small">${escapeHtml(client ? g3dClientName(client) : "Cliente não vinculado")}</div></td><td><span class="badge blue">${escapeHtml(row.status || "rascunho")}</span></td><td>${money(row.total)}</td><td><div class="actions">${client ? g3dWhatsAppButton(client, "btn whatsapp-btn", g3dBudgetMessage(client, row), "Enviar WhatsApp") : `<button class="btn whatsapp-btn" disabled>WhatsApp</button>`}<button class="btn" data-edit-budget="${row.id}">Editar</button><button class="btn" data-pdf-budget="${row.id}">PDF</button><button class="btn primary" data-order-budget="${row.id}" ${order ? "disabled" : ""}>${order ? "Pedido gerado" : "Gerar pedido"}</button><button class="btn danger" data-del-budget="${row.id}">Excluir</button></div></td></tr>`;
   }).join("") : `<tr><td colspan="5" class="empty">Nenhum orçamento ainda.</td></tr>`}</tbody></table></div>`;
   document.getElementById("newBudget").addEventListener("click", () => openBudgetForm());
   document.querySelectorAll("[data-edit-budget]").forEach(btn => btn.addEventListener("click", () => openBudgetForm(rows.find(row => row.id === btn.dataset.editBudget))));
   document.querySelectorAll("[data-del-budget]").forEach(btn => btn.addEventListener("click", () => softDelete("orcamentos", btn.dataset.delBudget)));
   document.querySelectorAll("[data-pdf-budget]").forEach(btn => btn.addEventListener("click", () => openBudgetPdf(rows.find(row => row.id === btn.dataset.pdfBudget))));
+  document.querySelectorAll("[data-order-budget]").forEach(btn => btn.addEventListener("click", () => generateOrderFromBudget(rows.find(row => row.id === btn.dataset.orderBudget))));
 }
 
 function renderPedidosWithWhatsApp(el) {
