@@ -1,0 +1,83 @@
+.smart-filter-panel {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.smart-filter-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.smart-filter-head h2 {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+
+.smart-filter-head p {
+  margin: 0;
+}
+
+.smart-filter-head strong {
+  min-width: 72px;
+  min-height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0 10px;
+  border: 1px solid rgba(56,189,248,.3);
+  border-radius: var(--radius);
+  color: #bae6fd;
+  background: rgba(56,189,248,.08);
+}
+
+.smart-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(150px, 220px) minmax(150px, 220px) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.smart-filter-grid .field {
+  margin: 0;
+}
+
+.smart-filter-grid select option {
+  color: #111827;
+}
+
+.smart-filter-actions {
+  display: flex;
+  align-items: end;
+}
+
+.smart-filter-hidden {
+  display: none !important;
+}
+
+.smart-filter-empty {
+  margin-top: 14px;
+  color: var(--muted);
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .smart-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .smart-filter-actions .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .smart-filter-head {
+    display: grid;
+  }
+
+  .smart-filter-head strong {
+    width: 100%;
+  }
+}
