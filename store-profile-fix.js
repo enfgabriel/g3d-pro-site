@@ -1,15 +1,15 @@
 (function () {
   const STORE_FIELDS = [
     ["nome_loja", "Nome da loja"],
-    ["responsavel", "Responsavel"],
+    ["responsavel", "Responsável"],
     ["documento", "CNPJ ou CPF"],
     ["whatsapp", "WhatsApp"],
     ["email", "Email"],
     ["site", "Site ou Instagram"],
     ["cidade", "Cidade"],
     ["estado", "Estado"],
-    ["endereco", "Endereco", "textarea"],
-    ["observacao_padrao", "Observacao padrao", "textarea"]
+    ["endereco", "Endereço", "textarea"],
+    ["observacao_padrao", "Observação padrão", "textarea"]
   ];
 
   function storeSafe(value) {
@@ -26,7 +26,7 @@
       .limit(1);
     const { data, error } = typeof g3dRunWithFreshSession === "function" ? await g3dRunWithFreshSession(() => query) : await query;
     if (error) {
-      showToast(error.message || "Nao foi possivel carregar os dados da loja.");
+      showToast(error.message || "Não foi possível carregar os dados da loja.");
       return state.cache.loja || null;
     }
     state.cache.loja = data?.[0] || null;
@@ -47,7 +47,7 @@
         <div class="image-upload-head">
           <div>
             <h3>Logo da loja</h3>
-            <p>Use PNG, JPG ou WEBP ate 5 MB. A logo sera usada nos PDFs comerciais.</p>
+            <p>Use PNG, JPG ou WEBP até 5 MB. A logo será usada nos PDFs comerciais.</p>
           </div>
           <div class="logo-preview-box" id="storeLogoPreview">G3D</div>
         </div>
@@ -78,7 +78,7 @@
   }
 
   async function saveStoreProfile(form, current = {}) {
-    if (!state.session?.user?.id) return showToast("Faca login novamente para salvar a loja.");
+    if (!state.session?.user?.id) return showToast("Faça login novamente para salvar a loja.");
     const button = form.querySelector('[type="submit"]');
     const oldLabel = button?.textContent || "Salvar loja";
     if (button) { button.disabled = true; button.textContent = "Salvando..."; }
@@ -93,7 +93,7 @@
       showToast("Dados da loja salvos.");
       renderPage();
     } catch (error) {
-      showToast(error.message || "Nao foi possivel salvar os dados da loja.");
+      showToast(error.message || "Não foi possível salvar os dados da loja.");
     } finally {
       if (button) { button.disabled = false; button.textContent = oldLabel; }
     }
@@ -104,7 +104,7 @@
     const status = document.getElementById("storeLogoStatus");
     try {
       if (status) status.textContent = "Enviando logo...";
-      if (typeof g3dUploadImage !== "function") throw new Error("Modulo de imagens ainda nao carregou. Recarregue a pagina.");
+      if (typeof g3dUploadImage !== "function") throw new Error("Módulo de imagens ainda não carregou. Recarregue a página.");
       const uploaded = await g3dUploadImage(file, "logos", "logo");
       form.logo_path.value = uploaded.path;
       form.logo_url.value = "";
@@ -112,7 +112,7 @@
       if (status) status.textContent = "Logo enviada. Clique em Salvar loja para gravar.";
       showToast("Logo enviada.");
     } catch (error) {
-      const message = error.message || "Nao foi possivel enviar a logo.";
+      const message = error.message || "Não foi possível enviar a logo.";
       if (status) status.textContent = message;
       showToast(message);
     }
@@ -121,7 +121,7 @@
   renderLoja = function renderLojaFixed(el) {
     const row = state.cache.loja || {};
     el.innerHTML = `
-      <div class="page-head"><div><h1>Minha loja</h1><p class="muted">Personalizacao usada nos orcamentos, documentos e atendimento.</p></div></div>
+      <div class="page-head"><div><h1>Minha loja</h1><p class="muted">Personalização usada nos orçamentos, documentos e atendimento.</p></div></div>
       <form class="card" id="storeForm">
         <input type="hidden" name="id" value="${storeSafe(row.id || "")}">
         <input type="hidden" name="logo_path" value="${storeSafe(row.logo_path || "")}">
