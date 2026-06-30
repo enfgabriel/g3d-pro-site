@@ -16,6 +16,14 @@
     return typeof escapeHtml === "function" ? escapeHtml(value || "") : String(value || "");
   }
 
+  function storeInput(form, name) {
+    return form?.querySelector(`[name="${name}"]`) || null;
+  }
+
+  function storeInputValue(form, name) {
+    return storeInput(form, name)?.value || "";
+  }
+
   async function loadCurrentStoreProfile() {
     if (!state.session?.user?.id) return null;
     const query = supabaseClient
@@ -62,8 +70,8 @@
   async function hydrateStoreLogo(form) {
     const preview = document.getElementById("storeLogoPreview");
     if (!preview) return;
-    const logoPath = form.logo_path?.value || "";
-    const logoUrl = form.logo_url?.value || "";
+    const logoPath = storeInputValue(form, "logo_path");
+    const logoUrl = storeInputValue(form, "logo_url");
     const url = typeof g3dAssetUrl === "function" ? await g3dAssetUrl(logoPath || logoUrl) : logoUrl;
     preview.innerHTML = url ? `<img src="${storeSafe(url)}" alt="Logo da loja">` : "G3D";
   }
@@ -85,7 +93,8 @@
     const { data, error } = typeof g3dRunWithFreshSession === "function" ? await g3dRunWithFreshSession(() => query) : await query;
     if (error) throw error;
     state.cache.loja = data || payload;
-    if (data?.id && form.id) form.id.value = data.id;
+    const idInput = storeInput(form, "id");
+    if (data?.id && idInput) idInput.value = data.id;
     return state.cache.loja;
   }
 
@@ -109,14 +118,17 @@
     const file = document.getElementById("storeLogoFile")?.files?.[0];
     const status = document.getElementById("storeLogoStatus");
     const uploadButton = document.getElementById("storeLogoUploadBtn");
+    const logoPathInput = storeInput(form, "logo_path");
+    const logoUrlInput = storeInput(form, "logo_url");
     const oldLabel = uploadButton?.textContent || "Enviar e salvar logo";
     try {
+      if (!logoPathInput || !logoUrlInput) throw new Error("Campos da logo não carregaram. Recarregue a página.");
       if (status) status.textContent = "Enviando logo...";
       if (uploadButton) { uploadButton.disabled = true; uploadButton.textContent = "Enviando..."; }
       if (typeof g3dUploadImage !== "function") throw new Error("Módulo de imagens ainda não carregou. Recarregue a página.");
       const uploaded = await g3dUploadImage(file, "logos", "logo");
-      form.logo_path.value = uploaded.path;
-      form.logo_url.value = "";
+      logoPathInput.value = uploaded.path;
+      logoUrlInput.value = "";
       if (status) status.textContent = "Logo enviada. Salvando no perfil da loja...";
       await persistStoreProfile(form, state.cache.loja || {});
       await hydrateStoreLogo(form);
