@@ -172,17 +172,5 @@
     return previousLoadSingle(table, key);
   };
 
-  if (typeof openBudgetPdf === "function") {
-    const previousOpenBudgetPdf = openBudgetPdf;
-    openBudgetPdf = async function openBudgetPdfWithSignedLogo(row) {
-      const profile = state.cache.loja || {};
-      if (profile.logo_path && typeof g3dAssetUrl === "function") {
-        const signedLogo = await g3dAssetUrl(profile.logo_path);
-        state.cache.loja = { ...profile, logo_url: signedLogo || profile.logo_url || "" };
-      }
-      return previousOpenBudgetPdf(row);
-    };
-  }
-
   window.G3D_STORE_PROFILE_FIX = true;
 })();
