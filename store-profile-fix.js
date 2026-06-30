@@ -55,7 +55,7 @@
         <div class="image-upload-head">
           <div>
             <h3>Logo da loja</h3>
-            <p>Use PNG, JPG ou WEBP até 5 MB. A logo será usada nos PDFs comerciais.</p>
+            <p>Use PNG, JPG ou WEBP até 5 MB. Ao selecionar o arquivo, o envio começa automaticamente.</p>
           </div>
           <div class="logo-preview-box" id="storeLogoPreview">G3D</div>
         </div>
@@ -63,7 +63,7 @@
           <input type="file" id="storeLogoFile" accept="image/png,image/jpeg,image/webp">
           <button class="btn" type="button" id="storeLogoUploadBtn">Enviar e salvar logo</button>
         </div>
-        <p class="muted small" id="storeLogoStatus">Ao enviar, a logo já será salva no perfil da loja.</p>
+        <p class="muted small" id="storeLogoStatus">Selecione uma imagem para enviar e salvar no perfil da loja.</p>
       </section>`;
   }
 
@@ -115,7 +115,8 @@
   }
 
   async function uploadStoreLogo(form) {
-    const file = document.getElementById("storeLogoFile")?.files?.[0];
+    const fileInput = document.getElementById("storeLogoFile");
+    const file = fileInput?.files?.[0];
     const status = document.getElementById("storeLogoStatus");
     const uploadButton = document.getElementById("storeLogoUploadBtn");
     const logoPathInput = storeInput(form, "logo_path");
@@ -123,7 +124,8 @@
     const oldLabel = uploadButton?.textContent || "Enviar e salvar logo";
     try {
       if (!logoPathInput || !logoUrlInput) throw new Error("Campos da logo não carregaram. Recarregue a página.");
-      if (status) status.textContent = "Enviando logo...";
+      if (!file) throw new Error("Selecione uma imagem para enviar.");
+      if (status) status.textContent = `Enviando ${file.name}...`;
       if (uploadButton) { uploadButton.disabled = true; uploadButton.textContent = "Enviando..."; }
       if (typeof g3dUploadImage !== "function") throw new Error("Módulo de imagens ainda não carregou. Recarregue a página.");
       const uploaded = await g3dUploadImage(file, "logos", "logo");
@@ -132,6 +134,7 @@
       if (status) status.textContent = "Logo enviada. Salvando no perfil da loja...";
       await persistStoreProfile(form, state.cache.loja || {});
       await hydrateStoreLogo(form);
+      if (fileInput) fileInput.value = "";
       if (status) status.textContent = "Logo enviada e salva no perfil da loja.";
       showToast("Logo enviada e salva.");
     } catch (error) {
@@ -160,6 +163,12 @@
     const form = document.getElementById("storeForm");
     hydrateStoreLogo(form);
     document.getElementById("storeLogoUploadBtn")?.addEventListener("click", () => uploadStoreLogo(form));
+    document.getElementById("storeLogoFile")?.addEventListener("change", event => {
+      const file = event.target.files?.[0];
+      const status = document.getElementById("storeLogoStatus");
+      if (status && file) status.textContent = `${file.name} selecionado. Iniciando envio...`;
+      if (file) uploadStoreLogo(form);
+    });
     form.addEventListener("submit", event => {
       event.preventDefault();
       saveStoreProfile(form, row);
