@@ -1,6 +1,6 @@
 -- G3D Pro - catalogo de produtos por usuario
 -- Execute no Supabase se o Catalogo der erro de permissao ao salvar.
--- Este script nao apaga dados; ele garante colunas e politicas por usuario.
+-- Este script nao apaga dados; ele garante colunas, grants e politicas por usuario.
 
 create table if not exists public.catalogo_produtos (
   id uuid primary key default gen_random_uuid(),
@@ -51,6 +51,9 @@ alter table public.catalogo_produtos
   add column if not exists created_at timestamptz default now(),
   add column if not exists updated_at timestamptz default now(),
   add column if not exists deleted_at timestamptz;
+
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on table public.catalogo_produtos to authenticated;
 
 alter table public.catalogo_produtos enable row level security;
 
