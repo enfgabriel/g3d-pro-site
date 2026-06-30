@@ -1,17 +1,39 @@
 (function () {
-  function finalPdfOpen(html, filename) {
+  function finalPdfPlaceholder() {
+    const win = window.open("", "_blank");
+    if (!win) {
+      if (typeof showToast === "function") showToast("Permita pop-ups para abrir o documento.");
+      return null;
+    }
+    win.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Preparando PDF</title><style>body{margin:0;display:grid;place-items:center;min-height:100vh;font-family:Arial;background:#101820;color:white}.box{padding:24px;text-align:center}.box strong{display:block;margin-bottom:8px;color:#24d982}</style></head><body><div class="box"><strong>G3D Pro</strong><span>Preparando orçamento...</span></div></body></html>`);
+    win.document.close();
+    return win;
+  }
+
+  function finalPdfOpen(html, filename, win = null) {
+    if (win) {
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+      return win;
+    }
     const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-    const win = window.open(url, "_blank", "noopener,noreferrer");
-    if (!win) {
+    const newWin = window.open(url, "_blank", "noopener,noreferrer");
+    if (!newWin) {
       URL.revokeObjectURL(url);
-      if (typeof showToast === "function") {
-        showToast("Permita pop-ups para abrir o documento.");
-      }
+      if (typeof showToast === "function") showToast("Permita pop-ups para abrir o documento.");
       return null;
     }
     setTimeout(() => URL.revokeObjectURL(url), 60000);
-    return win;
+    return newWin;
+  }
+
+  function finalPdfError(win, message) {
+    if (!win) return;
+    win.document.open();
+    win.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Erro no PDF</title><style>body{margin:0;display:grid;place-items:center;min-height:100vh;font-family:Arial;background:#101820;color:white}.box{max-width:520px;padding:24px;text-align:center}.box strong{display:block;margin-bottom:8px;color:#ffb4a8}</style></head><body><div class="box"><strong>Não foi possível gerar o PDF</strong><span>${finalPdfSafe(message)}</span></div></body></html>`);
+    win.document.close();
   }
 
   function finalPdfSafe(value) {
@@ -112,6 +134,8 @@
 
   openBudgetPdf = async function openBudgetPdfFinal(row) {
     if (!row) return;
+    const win = finalPdfPlaceholder();
+    if (!win) return;
     try {
       const profileBase = typeof budgetProfileDefaults === "function" ? budgetProfileDefaults(state.cache.loja || {}) : (state.cache.loja || {});
       const logoSource = profileBase.logo_path || profileBase.logo_url || state.cache.loja?.logo_path || state.cache.loja?.logo_url || "";
@@ -128,9 +152,10 @@
       const total = Number(breakdown?.total ?? row.total ?? (typeof calculatePrice === "function" ? calculatePrice(row) : 0));
       const pdfRow = { ...row, total: Number(total.toFixed(2)) };
       const html = finalPdfBuild(pdfRow, { profile, client, issueDate, validDate, breakdown, subtotal, discounts, total, projectImages });
-      finalPdfOpen(html, row.numero || "orcamento");
+      finalPdfOpen(html, row.numero || "orcamento", win);
     } catch (error) {
       console.error(error);
+      finalPdfError(win, error.message || "Erro inesperado ao montar o documento.");
       if (typeof showToast === "function") showToast("Não foi possível gerar o PDF do orçamento.");
     }
   };
