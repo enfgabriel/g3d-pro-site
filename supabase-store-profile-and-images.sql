@@ -2,6 +2,11 @@
 -- Execute no Supabase se Minha loja nao salvar ou a logo nao enviar.
 -- As regras abaixo mantem cada usuario restrito aos proprios dados e arquivos.
 
+alter table public.loja_perfis
+  add column if not exists logo_path text,
+  add column if not exists logo_url text,
+  add column if not exists updated_at timestamptz default now();
+
 alter table public.loja_perfis enable row level security;
 
 -- Opcional, depois de limpar perfis duplicados antigos:
