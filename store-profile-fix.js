@@ -41,7 +41,7 @@
     return `<div class="field"><label>${label}</label><input name="${key}" value="${value}" /></div>`;
   }
 
-  function renderLogoPanel(row = {}) {
+  function renderLogoPanel() {
     return `
       <section class="image-upload-panel span-2">
         <div class="image-upload-head">
@@ -53,9 +53,9 @@
         </div>
         <div class="image-upload-row">
           <input type="file" id="storeLogoFile" accept="image/png,image/jpeg,image/webp">
-          <button class="btn" type="button" id="storeLogoUploadBtn">Enviar logo</button>
+          <button class="btn" type="button" id="storeLogoUploadBtn">Enviar e salvar logo</button>
         </div>
-        <p class="muted small" id="storeLogoStatus">Depois de enviar, clique em Salvar loja.</p>
+        <p class="muted small" id="storeLogoStatus">Ao enviar, a logo já será salva no perfil da loja.</p>
       </section>`;
   }
 
@@ -77,19 +77,25 @@
     return { id, payload: typeof g3dNormalizePayload === "function" ? g3dNormalizePayload(payload) : payload };
   }
 
+  async function persistStoreProfile(form, current = {}) {
+    const { id, payload } = storePayloadFromForm(form, current);
+    const query = id
+      ? supabaseClient.from("loja_perfis").update(payload).eq("id", id).eq("user_id", state.session.user.id).select("*").single()
+      : supabaseClient.from("loja_perfis").insert(payload).select("*").single();
+    const { data, error } = typeof g3dRunWithFreshSession === "function" ? await g3dRunWithFreshSession(() => query) : await query;
+    if (error) throw error;
+    state.cache.loja = data || payload;
+    if (data?.id && form.id) form.id.value = data.id;
+    return state.cache.loja;
+  }
+
   async function saveStoreProfile(form, current = {}) {
     if (!state.session?.user?.id) return showToast("Faça login novamente para salvar a loja.");
     const button = form.querySelector('[type="submit"]');
     const oldLabel = button?.textContent || "Salvar loja";
     if (button) { button.disabled = true; button.textContent = "Salvando..."; }
     try {
-      const { id, payload } = storePayloadFromForm(form, current);
-      const query = id
-        ? supabaseClient.from("loja_perfis").update(payload).eq("id", id).eq("user_id", state.session.user.id).select("*").single()
-        : supabaseClient.from("loja_perfis").insert(payload).select("*").single();
-      const { data, error } = typeof g3dRunWithFreshSession === "function" ? await g3dRunWithFreshSession(() => query) : await query;
-      if (error) throw error;
-      state.cache.loja = data || payload;
+      await persistStoreProfile(form, current);
       showToast("Dados da loja salvos.");
       renderPage();
     } catch (error) {
@@ -102,19 +108,26 @@
   async function uploadStoreLogo(form) {
     const file = document.getElementById("storeLogoFile")?.files?.[0];
     const status = document.getElementById("storeLogoStatus");
+    const uploadButton = document.getElementById("storeLogoUploadBtn");
+    const oldLabel = uploadButton?.textContent || "Enviar e salvar logo";
     try {
       if (status) status.textContent = "Enviando logo...";
+      if (uploadButton) { uploadButton.disabled = true; uploadButton.textContent = "Enviando..."; }
       if (typeof g3dUploadImage !== "function") throw new Error("Módulo de imagens ainda não carregou. Recarregue a página.");
       const uploaded = await g3dUploadImage(file, "logos", "logo");
       form.logo_path.value = uploaded.path;
       form.logo_url.value = "";
+      if (status) status.textContent = "Logo enviada. Salvando no perfil da loja...";
+      await persistStoreProfile(form, state.cache.loja || {});
       await hydrateStoreLogo(form);
-      if (status) status.textContent = "Logo enviada. Clique em Salvar loja para gravar.";
-      showToast("Logo enviada.");
+      if (status) status.textContent = "Logo enviada e salva no perfil da loja.";
+      showToast("Logo enviada e salva.");
     } catch (error) {
       const message = error.message || "Não foi possível enviar a logo.";
       if (status) status.textContent = message;
       showToast(message);
+    } finally {
+      if (uploadButton) { uploadButton.disabled = false; uploadButton.textContent = oldLabel; }
     }
   }
 
@@ -128,7 +141,7 @@
         <input type="hidden" name="logo_url" value="${storeSafe(row.logo_url || "")}">
         <div class="form-grid">
           ${STORE_FIELDS.map(([key, label, kind]) => storeFieldHtml(row, key, label, kind)).join("")}
-          ${renderLogoPanel(row)}
+          ${renderLogoPanel()}
         </div>
         <div class="modal-foot"><button class="btn primary" type="submit">Salvar loja</button></div>
       </form>`;
