@@ -4,10 +4,8 @@
 
 alter table public.loja_perfis enable row level security;
 
--- Recomendado para evitar mais de um perfil por usuario.
--- Se houver erro por duplicidade, remova duplicados antigos antes de criar o indice.
-create unique index if not exists loja_perfis_user_id_unique
-on public.loja_perfis(user_id);
+-- Opcional, depois de limpar perfis duplicados antigos:
+-- create unique index if not exists loja_perfis_user_id_unique on public.loja_perfis(user_id);
 
 drop policy if exists "Usuario le seu perfil de loja" on public.loja_perfis;
 drop policy if exists "Usuario cria seu perfil de loja" on public.loja_perfis;
