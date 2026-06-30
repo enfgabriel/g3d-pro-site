@@ -125,8 +125,9 @@
       const breakdown = typeof commercialBudgetBreakdown === "function" ? commercialBudgetBreakdown(row) : null;
       const subtotal = breakdown ? breakdown.commercialSubtotal : Number(row.total || 0);
       const discounts = breakdown ? breakdown.discountPercent + breakdown.discountValue : Number(row.desconto_valor || 0);
-      const total = Number(row.total || breakdown?.total || (typeof calculatePrice === "function" ? calculatePrice(row) : 0));
-      const html = finalPdfBuild(row, { profile, client, issueDate, validDate, breakdown, subtotal, discounts, total, projectImages });
+      const total = Number(breakdown?.total ?? row.total ?? (typeof calculatePrice === "function" ? calculatePrice(row) : 0));
+      const pdfRow = { ...row, total: Number(total.toFixed(2)) };
+      const html = finalPdfBuild(pdfRow, { profile, client, issueDate, validDate, breakdown, subtotal, discounts, total, projectImages });
       finalPdfOpen(html, row.numero || "orcamento");
     } catch (error) {
       console.error(error);
