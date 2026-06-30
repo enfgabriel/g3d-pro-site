@@ -2,6 +2,7 @@
   const PAGE_KEY = "g3d:last-page";
   const DEFAULT_PAGE = "dashboard";
   let restoring = false;
+  let restoreAttempted = false;
 
   function canUseStorage() {
     try {
@@ -19,18 +20,25 @@
     return Boolean(page && Array.isArray(navPages) && navPages.some(([id]) => id === page));
   }
 
+  function readRawSavedPage() {
+    if (!storageReady) return "";
+    return localStorage.getItem(PAGE_KEY) || "";
+  }
+
   function saveCurrentPage() {
     if (!storageReady || restoring || !state?.session || !pageExists(state.page)) return;
+    const saved = readRawSavedPage();
+    if (!restoreAttempted && saved && saved !== state.page) return;
     localStorage.setItem(PAGE_KEY, state.page || DEFAULT_PAGE);
   }
 
   function readSavedPage() {
-    if (!storageReady) return DEFAULT_PAGE;
-    const saved = localStorage.getItem(PAGE_KEY);
+    const saved = readRawSavedPage();
     return pageExists(saved) ? saved : DEFAULT_PAGE;
   }
 
   function restoreLastPage() {
+    restoreAttempted = true;
     if (!state?.session) return;
     const saved = readSavedPage();
     if (!pageExists(saved) || state.page === saved) return;
@@ -39,6 +47,7 @@
     renderApp();
     renderPage();
     restoring = false;
+    saveCurrentPage();
   }
 
   if (typeof renderPage === "function") {
